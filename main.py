@@ -52,7 +52,15 @@ treeview.insert("", "2", "Minor", text= "Minor")
 treeview.insert("Minor", "3", "EUR/GBR", text= "EUR/GBR")
 treeview.bind("<Double-1>",callback)
 
+def readNews(item):
+    if item == "EUR/USD":
+        news = pd.read_csv("")
+    elif item == "GBR/USD":
+        news = pd.read_csv("")
+    textBox.insert(tk.INSERT, news)
+
 def openTrade():
+    global data, future, canvas, data_close_array, future_array, ax1,line2,canvas2,ax2,line3,canvas3,ax3,line4,canvas4,ax4
     print("OpenTrade")
     if item != "":
         print("Chosen item: ", item)
@@ -62,7 +70,7 @@ def openTrade():
             open_button.config(state= "disabled")
             start_button.config(state= "normal")
 
-            data = pd.read_csv("eurusd.csv")
+            data = pd.read_csv("")
 
             future = data[-1000:]
             data = data[:len(data)-1000]
@@ -85,12 +93,15 @@ def openTrade():
             canvas2.draw()
             canvas2.get_tk_widget().pack(side = tk.TOP, fill= tk.BOTH, expand= 1)
 
+            #read news
+            readNews(item)
+
         elif item == "EUR/GBR":
 
             open_button.config(state= "disabled")
             start_button.config(state= "normal")
 
-            data = pd.read_csv("eurgbr.csv")
+            data = pd.read_csv("")
 
             future = data[-1000:]
             data = data[:len(data)-1000]
@@ -112,6 +123,9 @@ def openTrade():
             canvas4 = FigureCanvasTkAgg(fig4, master= tab2)
             canvas4.draw()
             canvas4.get_tk_widget().pack(side = tk.TOP, fill= tk.BOTH, expand= 1)
+
+            #read news
+            readNews(item)
 
         else:
             messagebox.showinfo(title= "Warning", message="Double click to choose currency pair")
@@ -143,7 +157,122 @@ label_frame.place(x = 580, y = 25)
 tk.Label(label_frame,text= "Buy: ", bd = 3).grid(row= 0, column= 0)
 tk.Label(label_frame, text= "Sell: ", bd = 3).grid(row= 1, column= 0)
 
+buy_value = tk.Label(label_frame, text= "1", bd = 3)
+buy_value.grid(row= 0, column= 1)
+sell_value = tk.Label(label_frame, text= "0", bd = 3)
+sell_value.grid(row= 1, column= 1)
+
+def moving_average(a, n = 50):
+    ret = np.cumsum(a, dtype= float)
+    #moving
+    ret[n:] = ret[n:] - ret[:-n]
+    return ret[n-1:]/n
+
+def update():
+    global data_close_array, ax1,ax2,ax3,ax4
+
+    spread = 0.0002
+    buy_value.config(text= str((data_close_array[-1]-spread).round(5)))
+    sell_value.config(text= str((data_close_array[-1]+spread).round(5)))
+
+    window.after(500, update)
+
+    data_close_array = np.append(data_close_array, future_array.pop(0))
+
+    if method.get() == "m1":
+        if item == "EUR/USD":
+            ax1.set_xlim(0,len(data_close_array) + 10)
+            line.set_ydata(data_close_array)
+            line.set_xdata(len(data_close_array))
+
+            ax2.set_xlim(0,len(data_close_array) + 10)
+            ax2.scatter(range(len(data_close_array)), data_close_array, s = 1, alpha= 0.5, color = "blue")
+
+            n = 50
+            mid_rolling = moving_average(data_close_array, n)
+            ax1.plot(range(n-1,len(data_close_array)),mid_rolling,linestyle = "--", color = "red")
+            ax2.plot(range(n-1,len(data_close_array)),mid_rolling,linestyle = "--", color = "red")
+
+            canvas.draw()
+            canvas2.draw
+
+        elif item == "EUR/GBR":
+            ax3.set_xlim(0,len(data_close_array) + 10)
+            line3.set_ydata(data_close_array)
+            line3.set_xdata(len(data_close_array))
+
+            ax4.set_xlim(0,len(data_close_array) + 10)
+            ax4.scatter(range(len(data_close_array)), data_close_array, s = 1, alpha= 0.5, color = "blue")
+
+            n = 50
+            mid_rolling = moving_average(data_close_array, n)
+            ax3.plot(range(n-1,len(data_close_array)),mid_rolling,linestyle = "--", color = "red")
+            ax4.plot(range(n-1,len(data_close_array)),mid_rolling,linestyle = "--", color = "red")
+
+            canvas3.draw()
+            canvas4.draw
+
+
+    elif method.get() == "m2":
+        if item == "EUR/USD":
+            ax1.set_xlim(0,len(data_close_array) + 10)
+            line.set_ydata(data_close_array)
+            line.set_xdata(len(data_close_array))
+
+            ax2.set_xlim(0,len(data_close_array) + 10)
+            ax2.scatter(range(len(data_close_array)), data_close_array, s = 1, alpha= 0.5, color = "blue")
+
+            n = 200
+            long_rolling = moving_average(data_close_array, n)
+            ax1.plot(range(n-1,len(data_close_array)),long_rolling,linestyle = "--", color = "red")
+            ax2.plot(range(n-1,len(data_close_array)),long_rolling,linestyle = "--", color = "red")
+
+            canvas.draw()
+            canvas2.draw
+
+        elif item == "EUR/GBR":
+            ax3.set_xlim(0,len(data_close_array) + 10)
+            line3.set_ydata(data_close_array)
+            line3.set_xdata(len(data_close_array))
+
+            ax4.set_xlim(0,len(data_close_array) + 10)
+            ax4.scatter(range(len(data_close_array)), data_close_array, s = 1, alpha= 0.5, color = "blue")
+
+            n = 200
+            long_rolling = moving_average(data_close_array, n)
+            ax3.plot(range(n-1,len(data_close_array)),long_rolling,linestyle = "--", color = "green")
+            ax4.plot(range(n-1,len(data_close_array)),long_rolling,linestyle = "--", color = "green")
+
+            canvas3.draw()
+            canvas4.draw
+
+    else: 
+        if item == "EUR/USD":
+            ax1.set_xlim(0,len(data_close_array) + 10)
+            line.set_ydata(data_close_array)
+            line.set_xdata(len(data_close_array))
+
+            ax2.set_xlim(0,len(data_close_array) + 10)
+            ax2.scatter(range(len(data_close_array)), data_close_array, s = 1, alpha= 0.5, color = "blue")
+
+            canvas.draw()
+            canvas2.draw
+
+        elif item == "EUR/GBR":
+            ax3.set_xlim(0,len(data_close_array) + 10)
+            line3.set_ydata(data_close_array)
+            line3.set_xdata(len(data_close_array))
+
+            ax4.set_xlim(0,len(data_close_array) + 10)
+            ax4.scatter(range(len(data_close_array)), data_close_array, s = 1, alpha= 0.5, color = "blue")
+
+            canvas3.draw()
+            canvas4.draw
+
+
+
 def startTrading():
+    window.after(0,update)
     print("startTrading")
 
 start_button = tk.Button(frame2, text= "Start Trading", command= startTrading)
