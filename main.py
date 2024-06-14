@@ -41,8 +41,8 @@ item = ""
 
 def callback(event):
     global item
-    item = treeview.identify("item", event.x,event.y)
-    print("Clicked: ", item)
+    item = treeview.focus()
+    treeview.bind("<Double-1>", callback)
 
 treeview = ttk.Treeview(frame1)
 treeview.grid(row = 0, column= 1, padx= 25, pady= 25)
@@ -54,6 +54,69 @@ treeview.bind("<Double-1>",callback)
 
 def openTrade():
     print("OpenTrade")
+    if item != "":
+        print("Chosen item: ", item)
+
+        if item == "EUR/USD":
+
+            open_button.config(state= "disabled")
+            start_button.config(state= "normal")
+
+            data = pd.read_csv("eurusd.csv")
+
+            future = data[-1000:]
+            data = data[:len(data)-1000]
+            data_close_array = data['Close'].values
+            future_array = list(future['Close'].values)
+
+            fig1 = plt.Figure(figsize=(5,4), dpi= 100)
+            ax1 = fig1.add_subplot(111)
+            line, = ax1.plot(range(len(data)),data['Close'],color = "blue")
+
+            canvas = FigureCanvasTkAgg(fig1, master = tab1)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side = tk.TOP, fill= tk.BOTH, expand = 1)
+
+            fig2 = plt.Figure(figsize= (5,4), dpi= 100)
+            ax2 = fig2.add_subplot(111)
+            line2 = ax2.scatter(range(len(data)),data['Close'],s = 1, alpha= 0.5, color = "blue")
+
+            canvas2 = FigureCanvasTkAgg(fig2, master= tab2)
+            canvas2.draw()
+            canvas2.get_tk_widget().pack(side = tk.TOP, fill= tk.BOTH, expand= 1)
+
+        elif item == "EUR/GBR":
+
+            open_button.config(state= "disabled")
+            start_button.config(state= "normal")
+
+            data = pd.read_csv("eurgbr.csv")
+
+            future = data[-1000:]
+            data = data[:len(data)-1000]
+            data_close_array = data['Close'].values
+            future_array = list(future['Close'].values)
+
+            fig3 = plt.Figure(figsize=(5,4), dpi= 100)
+            ax3 = fig3.add_subplot(111)
+            line3, = ax3.plot(range(len(data)),data['Close'],color = "blue")
+
+            canvas3 = FigureCanvasTkAgg(fig3, master = tab1)
+            canvas3.draw()
+            canvas3.get_tk_widget().pack(side = tk.TOP, fill= tk.BOTH, expand = 1)
+
+            fig4 = plt.Figure(figsize= (5,4), dpi= 100)
+            ax4 = fig4.add_subplot(111)
+            line4 = ax4.scatter(range(len(data)),data['Close'],s = 1, alpha= 0.5, color = "blue")
+
+            canvas4 = FigureCanvasTkAgg(fig4, master= tab2)
+            canvas4.draw()
+            canvas4.get_tk_widget().pack(side = tk.TOP, fill= tk.BOTH, expand= 1)
+
+        else:
+            messagebox.showinfo(title= "Warning", message="Double click to choose currency pair")
+    else:
+        messagebox.showinfo(title= "Warning", message="Double click to choose currency pair")
 
 
 open_button = tk.Button(frame1, text= "Open Trading", command = openTrade)
